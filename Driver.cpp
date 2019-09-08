@@ -16,10 +16,11 @@ unordered_map<string, string> aliasmap;
 int rootflag = 0;
 int exit_status = 0;
 int customcommand(char *command, char *arguments[]){
-    int l = 2, i = 0, choice=10,c=0;
+    int l = 3, i = 0, choice=10,c=0;
     char* custom[l];
     custom[0] = "echo";
     custom[1] = "cd";
+    custom[2] = "~";
     if(!command){
         return c;
     }
@@ -58,22 +59,12 @@ int customcommand(char *command, char *arguments[]){
             c=1;
             break;
         case 1:
-            char cwd[1000];
-            if (getcwd(cwd, sizeof(cwd)) != NULL) {
-            //printf("Current working dir: %s\n", cwd);
-            if(!arguments[1]){
-                cout << "Current working dir: " << cwd << endl;
-            }
-            else if(strcmp(arguments[1],"..")==0){
-                cout << "GO BACK" <<endl;
-            }
-            else{
-            strcat(cwd, arguments[1]);
-            cout << cwd << endl;
-            chdir(cwd);
-            }
-            }
+            chdir(arguments[1]);
             c = 1;
+            break;
+        case 2:
+            cout << getenv("HOME") << endl;
+            c=1;
             break;
         default:
             break;
@@ -81,19 +72,15 @@ int customcommand(char *command, char *arguments[]){
         return c;
 }
 void forkandexec(char *command, char *arguments[]){  //Forks child and executs command
-    string c(command);
+
     pid_t p = fork();
     if (p == 0) {
+        string c(command);
         if (aliasmap.find(c) != aliasmap.end()){
             string x(aliasmap.at(c));
-            //cout << x<< endl;
-            //char *argu[MX];
-//            strcpy(command,x.c_str());
+
             separate(x, arguments, " ");
-//            for(int z=0; arguments[z]; z++){
-//                cout << arguments[z] << endl;
-//            }
-            //arguments = arg;
+
             command = arguments[0];
         }
         int execute = execvp(command, arguments);
@@ -156,44 +143,49 @@ bool ispiped(string str){
 }
 void forkandexecPipe(char **parts, int l){
     int j;
-    char *argu[1000];char *token;
+    char *argu[1000];
+    char *t;
     pid_t x = fork();
     if(x==0){
     for( j=0; j<(l-1); j++){
-        int pd[2];
-        pipe(pd);
+        int arrp[2];
+        pipe(arrp);
         pid_t p = fork();
         if (p == 0) {
-            dup2(pd[1], 1);
-            token = strtok(parts[j], " ");
-            char *command = token;
+            dup2(arrp[1], 1);
+            t = strtok(parts[j], " ");
+            char *command = t;
             char *argu[1000];int i=1;
+//                    string c(command);
+//                    if (aliasmap.find(c) != aliasmap.end()){
+//                        string x(aliasmap.at(c));
+//                        separate(x, argu, " ");
+//                        command = argu[0];
+//                    }
             argu[0] = command;
-            while(token != 0){
-                token = strtok(0, " ");
-                argu[i] = token;
+            while(t != 0){
+                t = strtok(0, " ");
+                argu[i] = t;
                 i++;
             }
             argu[i-1]=NULL;
-//            string str(parts[j]);
-//            char *argu[1000];
-//            splitcmd(str,argu);
+
             int execute = execvp(argu[0], argu);
             if (execute < 0) {
                 printf("\nCould not execute command..");
             }
         }
         wait(NULL);
-        dup2(pd[0], 0);
-        close(pd[1]);
+        dup2(arrp[0], 0);
+        close(arrp[1]);
     }
-    token = strtok(parts[j], " ");
-    char *command = token;
+    t = strtok(parts[j], " ");
+    char *command = t;
     int i=1;
     argu[0] = command;
-    while(token != 0){
-        token = strtok(0, " ");
-        argu[i] = token;
+    while(t != 0){
+        t = strtok(0, " ");
+        argu[i] = t;
         i++;
     }
     argu[i-1]=NULL;
@@ -214,11 +206,11 @@ void pipesplit(string str){
     strcpy(arr, str.c_str());
     arr[str.length()] = '\0';
     char *argu[1000];
-    char *token = strtok(arr, "|");
+    char *t = strtok(arr, "|");
     //argu[0] = token;
-    while (token != NULL)
-    {   argu[i] = token;
-        token = strtok(NULL, "|");
+    while (t != NULL)
+    {   argu[i] = t;
+        t = strtok(NULL, "|");
         i++;
     }
     forkandexecPipe(argu, i);
@@ -236,6 +228,10 @@ int checkAlias(string str){
     string k(argu[2]);string val(argu[1]);
     removeCharsFromString(val, "\"");
     removeCharsFromString(val, "\'");
+//    if(val.length() == 0){
+//        cout << "Wrong use of alias"<<endl;
+//        return 1;
+//    }
     aliasmap[k] = val;
     //aliasmap.insert({k, val});
     for (auto x : aliasmap){
