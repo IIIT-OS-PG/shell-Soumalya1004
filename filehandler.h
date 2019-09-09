@@ -16,14 +16,15 @@
 #define MX 1000
 using namespace std;
 void hello(){
-    char c[1000];
+    char c[MX];
     char ch;
     char* k, *v;
-    FILE *source = fopen("/media/soumalya/New Volume/Ebooks_Mtech/sem1/Operating System/Assignment1/Assignment1/Assignment1/.myenvrc","r");
+    //FILE *source = fopen("/media/soumalya/New Volume/Ebooks_Mtech/sem1/Operating System/Assignment1/Assignment1/Assignment1/.myenvrc","r");
+    FILE *source = fopen(".myenvrc","r");
     if(source == NULL){
         printf("File can\'t be accessed");
     }
-    while ( fgets(c,1000,source) != NULL){
+    while(fgets(c,MX,source)!=NULL){
         k = strtok(c, "-");
         v = strtok(0, " ");
         setenv(k, v, 1);
@@ -77,20 +78,19 @@ void customsplit(string str,char *argu[1000], char *s){
 int isSubstring(string s1, string s2){
     int b = s2.length();int a = s1.length();
     int i,j;
-    for (i = 0; i <= b - a; i++){
-        for (j = 0; j < a; j++){
-            if (s2[i + j] != s1[j]){
-                break;
-            }
+    for(i=0; i<=(b-a); i++){
+        for(j=0; j<a; j++){
+            if(s2[i+j]!=s1[j]){break;}
         }
-        if (j == a){return i;}
+        if(j==a){return 1;}
     }
     return -1;
 }
-void removeCharsFromString( string &str, char* charsToRemove ) {
-    int i;
-   for(i = 0; i<strlen(charsToRemove); ++i){
-      str.erase(remove(str.begin(), str.end(), charsToRemove[i]), str.end());
+void characterremove(string &s, char* c){
+   int length = strlen(c);
+   int i;
+   for(i = 0; i<length; ++i){
+      s.erase(remove(s.begin(), s.end(), c[i]), s.end());
    }
 }
 int ioredirect(string str){

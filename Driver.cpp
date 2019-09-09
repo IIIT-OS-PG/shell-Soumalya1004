@@ -14,10 +14,12 @@
 using namespace std;
 unordered_map<string, string> aliasmap;
 int rootflag = 0;
-int exit_status = 0;
+int estatus = 0;
 int customcommand(char *command, char *arguments[]){
-    int l = 3, i = 0, choice=10,c=0;
+    int l = 3;
     char* custom[l];
+    int i = 0, choice=10;
+    int c=0;
     custom[0] = "echo";
     custom[1] = "cd";
     custom[2] = "~";
@@ -39,12 +41,12 @@ int customcommand(char *command, char *arguments[]){
             }
             else{
                 if(*(arguments[1]+1) == '$'){
-                    cout << getpid();
+                    cout << getpid()<<endl;
                     c=1;
                     break;
                 }
                 if(*(arguments[1]+1) == '?'){
-                    cout << exit_status;
+                    cout << estatus <<endl;
                     c=1;
                     break;
                 }
@@ -53,7 +55,7 @@ int customcommand(char *command, char *arguments[]){
                     cout << "Cant access variable"<<endl;
                 }
                 else{
-                    cout << getenv(env);
+                    cout << getenv(env)<<endl;
                 }
             }
             c=1;
@@ -71,8 +73,7 @@ int customcommand(char *command, char *arguments[]){
         }
         return c;
 }
-void forkandexec(char *command, char *arguments[]){  //Forks child and executs command
-
+void forkandexec(char *command, char *arguments[]){  //Forks child and execute command
     pid_t p = fork();
     if (p == 0) {
         string c(command);
@@ -84,15 +85,16 @@ void forkandexec(char *command, char *arguments[]){  //Forks child and executs c
             command = arguments[0];
         }
         int execute = execvp(command, arguments);
+
         if (execute < 0) {
-            printf("\nCould not execute command..");
+            cout << "Could not execute command" << endl;
         }
         exit(0);
     }
     else{
-        int status;
-        waitpid(p, &status, 0);
-        exit_status = WEXITSTATUS(status);
+        int stat;
+        waitpid(p, &stat, 0);
+        estatus = WEXITSTATUS(stat);
         //wait(NULL);
         return;
     }
@@ -104,19 +106,19 @@ void welcomenote(){
     cout << username <<endl;
 }
 void splitcommands(string str){
-    char* token;
+//    char* t;
     char *argu[MX];
     char arr[str.length()+1];
     strcpy(arr, str.c_str());
     arr[str.length()] = '\0';
-    char *command;
-//    token = strtok(arr, " ");
-//    command = token;
+//    char *command;
+//    t = strtok(arr, " ");
+//    command = t;
 //    int i=1;
 //    argu[0] = command;
-//    while(token != 0){
-//        token = strtok(0, " ");
-//        argu[i] = token;
+//    while(t != 0){
+//        t = strtok(0, " ");
+//        argu[i] = t;
 //        i++;
 //    }
     separate(str, argu, " ");
@@ -172,11 +174,13 @@ void forkandexecPipe(char **parts, int l){
 
             int execute = execvp(argu[0], argu);
             if (execute < 0) {
-                printf("\nCould not execute command..");
+                cout << "Could not execute command" <<endl;
             }
         }
         wait(NULL);
+
         dup2(arrp[0], 0);
+
         close(arrp[1]);
     }
     t = strtok(parts[j], " ");
@@ -197,7 +201,10 @@ void forkandexecPipe(char **parts, int l){
     perror("exec");
     }
     else{
-        wait(NULL);
+        int stat;
+        waitpid(x, &stat, 0);
+        estatus = WEXITSTATUS(stat);
+//        wait(NULL);
         return;
     }
 }
@@ -205,7 +212,7 @@ void pipesplit(string str){
     char arr[str.length()+1];int i=0;
     strcpy(arr, str.c_str());
     arr[str.length()] = '\0';
-    char *argu[1000];
+    char *argu[MX];
     char *t = strtok(arr, "|");
     //argu[0] = token;
     while (t != NULL)
@@ -218,7 +225,7 @@ void pipesplit(string str){
 int checkAlias(string str){
     int v = isSubstring("alias ", str);char *token;
     if(v == -1){return 0;}
-    char *argu[1000];int i=0;
+    char *argu[MX];int i=0;
     char arr[str.length()+1];arr[str.length()] = '\0';
     strcpy(arr, str.c_str());
     argu[0] = strtok(arr, "=");argu[1] = strtok(0, "=");//value
@@ -226,8 +233,8 @@ int checkAlias(string str){
     //cout << argu[1];
     if(argu[2] == "" || argu[1] == "")return 1;
     string k(argu[2]);string val(argu[1]);
-    removeCharsFromString(val, "\"");
-    removeCharsFromString(val, "\'");
+    characterremove(val, "\"");
+    characterremove(val, "\'");
 //    if(val.length() == 0){
 //        cout << "Wrong use of alias"<<endl;
 //        return 1;
@@ -250,7 +257,7 @@ void redirect(string str, int a){
         separate(str, fileargu, ">");
         fname = fileargu[1];
         string s(fname);
-        removeCharsFromString(s, " ");
+        characterremove(s, " ");
         strcpy(fname, s.c_str());
         stream = fopen(fname, "wb");
         out =  fileno(stream);
@@ -260,7 +267,7 @@ void redirect(string str, int a){
         separate(str, fileargu, ">>");
         fname = fileargu[1];
         string s(fname);
-        removeCharsFromString(s, " ");
+        characterremove(s, " ");
         strcpy(fname, s.c_str());
         stream = fopen(fname, "ab+");
         out =  fileno(stream);
@@ -272,7 +279,10 @@ void redirect(string str, int a){
     close(out);
     }
     else{
-        wait(NULL);
+        int stat;
+        waitpid(p, &stat, 0);
+        estatus = WEXITSTATUS(stat);
+//        wait(NULL);
     }
 }
 void initialProcessing(){
