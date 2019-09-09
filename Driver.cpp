@@ -27,8 +27,8 @@ int customcommand(char *command, char *arguments[]){
     if(!command){
         return c;
     }
-    for (i = 0; i < l; i++) {
-        if (strcmp(command, custom[i]) == 0) {
+    for(i=0; i<l; i++){
+        if(strcmp(command, custom[i]) == 0) {
             choice = i;
             break;
         }
@@ -102,7 +102,7 @@ int customcommand(char *command, char *arguments[]){
 }
 void forkandexec(char *command, char *arguments[]){  //Forks child and execute command
     pid_t p = fork();
-    if (p == 0) {
+    if(p==0){
         string c(command);
         if (aliasmap.find(c) != aliasmap.end()){
             string x(aliasmap.at(c));
@@ -113,7 +113,7 @@ void forkandexec(char *command, char *arguments[]){  //Forks child and execute c
         }
         int execute = execvp(command, arguments);
 
-        if (execute < 0) {
+        if(execute<0){
             cout << "Could not execute command" << endl;
         }
         exit(0);
