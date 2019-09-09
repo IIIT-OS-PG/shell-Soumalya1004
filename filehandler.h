@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <dirent.h>
-#define MX 1000
+#define MX 1024
 using namespace std;
 void hello(){
     char c[MX];
@@ -25,8 +25,9 @@ void hello(){
         printf("File can\'t be accessed");
     }
     while(fgets(c,MX,source)!=NULL){
-        k = strtok(c, "-");
+        k = strtok(c, "=");
         v = strtok(0, " ");
+        if(!k || !v){cout << "Error iitializing data";return;}
         setenv(k, v, 1);
     }
 }
@@ -40,40 +41,6 @@ void separate(string str, char *argu[], char *delimiter){
         argu[++i] = token;
     }
     //return argu;
-}
-void splitcmd(string str,char *argu[MX]){
-    char* token;
-    char arr[str.length()+1];
-    strcpy(arr, str.c_str());
-    //arr[str.length()] = '\0';
-    token = strtok(arr, " ");
-    cout << token;
-    char *command = token;
-    int i=1;
-    argu[0] = command;
-    while(token != 0){
-        token = strtok(0, " ");
-        cout << argu[i];
-        argu[i] = token;
-        i++;
-    }
-
-    //return argu;
-}
-void customsplit(string str,char *argu[1000], char *s){
-    char* token;
-    char arr[str.length()+1];
-    strcpy(arr, str.c_str());
-    //arr[str.length()] = '\0';
-    token = strtok(arr, s);
-    char *command = token;
-    int i=1;
-    argu[0] = command;
-    while(token != 0){
-        token = strtok(0, s);
-        argu[i] = token;
-        i++;
-    }
 }
 int isSubstring(string s1, string s2){
     int b = s2.length();int a = s1.length();

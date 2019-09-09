@@ -10,19 +10,20 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <fcntl.h>
-#define MX 1000
+#define MX 1024
 using namespace std;
 unordered_map<string, string> aliasmap;
 int rootflag = 0;
 int estatus = 0;
 int customcommand(char *command, char *arguments[]){
-    int l = 3;
+    int l = 4;
     char* custom[l];
     int i = 0, choice=10;
     int c=0;
     custom[0] = "echo";
     custom[1] = "cd";
     custom[2] = "~";
+    custom[3] = "export";
     if(!command){
         return c;
     }
@@ -66,6 +67,32 @@ int customcommand(char *command, char *arguments[]){
             break;
         case 2:
             cout << getenv("HOME") << endl;
+            c=1;
+            break;
+        case 3:
+            cout << arguments[0]<< endl;
+            cout << arguments[1]<< endl;
+            if(arguments[1]){
+                string x(arguments[1]);
+                separate(x, arguments, "=");
+                if(!arguments[1]){cout << "Export command syntax is wrong"<<endl;c=1;break;}
+                FILE *stream;char* k, *v;char carr[MX];
+                stream = fopen(".myenvrc", "ab+");
+//                while(fgets(carr,MX,stream)!=NULL){
+//                    k = strtok(carr, "=");
+//                    v = strtok(0, " ");
+//                    if(strcmp(k, arguments[1]) == 0){
+//                        setenv(arguments[0], arguments[1], 1);
+//                        strcpy(arguments[1], x.c_str());
+//                        fputs(arguments[1], stream);
+//                        fclose(stream);c=1;break;
+//                    }
+//                }
+                setenv(arguments[0], arguments[1], 1);
+                strcpy(arguments[1], x.c_str());
+                fputs(arguments[1], stream);
+                fclose(stream);
+            }
             c=1;
             break;
         default:
@@ -145,7 +172,7 @@ bool ispiped(string str){
 }
 void forkandexecPipe(char **parts, int l){
     int j;
-    char *argu[1000];
+    char *argu[MX];
     char *t;
     pid_t x = fork();
     if(x==0){
@@ -157,7 +184,7 @@ void forkandexecPipe(char **parts, int l){
             dup2(arrp[1], 1);
             t = strtok(parts[j], " ");
             char *command = t;
-            char *argu[1000];int i=1;
+            char *argu[MX];int i=1;
 //                    string c(command);
 //                    if (aliasmap.find(c) != aliasmap.end()){
 //                        string x(aliasmap.at(c));
@@ -306,16 +333,18 @@ int main(){
     hello();
     welcomenote();
     while(true){
-        char cwd[1000];
+        char cwd[MX];
         string prompt ="";
         string us(getenv("USER"));
         if (getcwd(cwd, sizeof(cwd)) != NULL) {
             if(rootflag == 1){
-                strcat(cwd, "#");
-                prompt = "roots@" + us + cwd;
+                setenv("PS1", "#", 1);
+                strcat(cwd, getenv("PS1"));
+                prompt = "root@" + us + cwd;
             }
             else{
-                strcat(cwd, "$");
+                setenv("PS1", "$", 1);
+                strcat(cwd, getenv("PS1"));
                 prompt = "users@" + us + cwd;
             }
             cout << prompt;
